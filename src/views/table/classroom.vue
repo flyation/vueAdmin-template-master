@@ -1,6 +1,7 @@
 <template>
 <div>
-  <el-form :inline="true" :model="formInline" class="demo-form-inline">
+  <!-- 查询条件 -->
+  <el-form :inline="true" class="demo-form-inline">
     <el-form-item label="教室类型">
       <el-input v-model="searchMap.type" placeholder="教室类型"></el-input>
     </el-form-item>
@@ -11,30 +12,30 @@
       <el-input-number v-model="searchMap.floor"></el-input-number>
     </el-form-item>
     <el-form-item>
-      <el-button type="primary" @click="onSubmit">查询</el-button>
-      <el-button type="primary" @click="dialogVisible = true">新增</el-button>
+      <el-button type="primary" @click="handleQuery">查询</el-button>
+      <el-button type="primary" @click="handleAdd">新增</el-button>
     </el-form-item>
   </el-form>
 
   <!-- 新增弹出框 -->
-  <el-dialog title="编辑" :visible.sync="dialogVisible"  :before-close="handleClose">
-    <el-form ref="form" :model="form" label-width="80px">
+  <el-dialog title="新增教室" :visible.sync="dialogVisible" :before-close="handleClose" width="30%">
+    <el-form :model="pojo" label-width="100px" :disabled="formDisable">
       <el-form-item label="教室名">
-        <el-input v-model="pojo.name" placeholder="教室名"></el-input>
+        <el-input v-model="pojo.name" placeholder="教室名" style="width: auto"></el-input>
       </el-form-item>
       <el-form-item label="教室楼层">
         <el-input-number v-model="pojo.floor" placeholder="教室楼层"></el-input-number>
       </el-form-item>
       <el-form-item label="教室容量">
-        <el-input v-model="pojo.capacity" placeholder="教室容量"></el-input>
+        <el-input-number v-model="pojo.capacity" placeholder="教室容量"></el-input-number>
       </el-form-item>
       <el-form-item label="教室类型">
         <el-select v-model="pojo.type" placeholder="请选择">
           <el-option
             v-for="item in options"
             :key="item.value"
-            :label="item"
-            :value="item">
+            :label="item.label"
+            :value="item.value">
           </el-option>
         </el-select>
       </el-form-item>
@@ -43,21 +44,16 @@
       </el-form-item>
     </el-form>
     <span slot="footer" class="dialog-footer">
-      <el-button @click="dialogVisible = false">取 消</el-button>
-      <el-button type="primary" @click="dialogVisible = false">确 定</el-button>
+      <el-button @click="handleCancel">取 消</el-button>
+      <el-button type="primary" @click="handleSubmit">确 定</el-button>
     </span>
   </el-dialog>
 
+  <!-- 教室表格 -->
   <el-table
     :data="list"
     stripe
-    style="width: 100%"
-    :row-class-name="tableRowClassName">
-    <el-table-column
-      prop="id"
-      label="dbid"
-      width="180">
-    </el-table-column>
+    style="width: 100%">
     <el-table-column
       prop="name"
       label="教室名"
@@ -84,12 +80,13 @@
       label="操作"
       width="100">
       <template slot-scope="scope">
-        <el-button @click="handleClick(scope.row)" type="text" size="small">查看</el-button>
-        <el-button type="text" size="small">编辑</el-button>
+        <el-button @click="handleShow(scope.$index, scope.row)" type="text" size="small">查看</el-button>
+        <el-button type="text" size="small" @click="handleEdit(scope.$index, scope.row)">编辑</el-button>
       </template>
     </el-table-column>
   </el-table>
 
+  <!-- 分页 -->
   <el-pagination
     background
     @size-change="handleSizeChange"
@@ -109,36 +106,30 @@ import classroomApi from '@/api/classroom'
 export default {
   data() {
     return {
-      list: [],
+      list: [], // 后端传回数据列表
       total: 0, // 总记录数
       currentPage: 0, // 当前页
       pageSize: 0, // 每页大小
-      searchMap: {
-        delete: 0
-      }, // 查询条件
+      searchMap: {}, // 查询条件
       dialogVisible: false, // 弹出框是否可见
-      pojo: {},
-      options: ['普通教室', '多媒体教室']
+      formDisable: false, // 表单是否禁用
+      pojo: {}, // 弹出框数据
+      // 教室类型选项
+      options: [{
+        value: '0',
+        label: '普通教室'
+      }, {
+        value: '1',
+        label: '多媒体教室'
+      }]
     }
   },
   created() {
     this.currentPage = 1
     this.pageSize = 10
-    this.searchMap = { eg: 'eg' }
     this.fetchData()
   },
   methods: {
-    fetchData() {
-      classroomApi.search(this.currentPage, this.pageSize, this.searchMap).then(response => {
-        this.list = response.data.rows
-        this.total = response.data.total
-      })
-    },
-    // fetchData() {
-    //   classroomApi.getList().then(response => {
-    //     this.list = response.data
-    //   })
-    // }
     handleSizeChange(val) {
       console.log(`每页 ${val} 条`)
       this.pageSize = val
@@ -149,6 +140,70 @@ export default {
       this.currentPage = val
       this.fetchData()
     },
+    /**
+     * 抓取数据
+     */
+    fetchData() {
+      classroomApi.search(this.currentPage, this.pageSize, this.searchMap).then(response => {
+        this.total = response.data.total
+        this.list = response.data.rows
+      })
+    },
+    /**
+     * 条件查询api
+     */
+    queryClassroom() {
+      // TODO 条件查询api
+      this.searchMap = {} // 清空查询条件
+    },
+    /**
+     * 新增api
+     */
+    addClassroom() {
+      classroomApi.addClassroom(this.pojo).then(response => {})
+      this.fetchData()
+      this.dialogVisible = false
+      this.pojo = {}
+    },
+    /**
+     * 编辑api
+     */
+    editClassroom() {
+      // TODO 编辑api
+    },
+    /**
+     * 查询按钮
+     */
+    handleQuery() {
+      // TODO 条件查询api
+    },
+    /**
+     * 新增按钮
+     */
+    handleAdd() {
+      this.dialogVisible = true
+      this.formDisable = false
+      // TODO 新增api
+    },
+    /**
+     * 表格查看按钮
+     */
+    handleShow(index, row) {
+      this.dialogVisible = true
+      this.formDisable = true
+      this.pojo = row
+    },
+    /**
+     * 表格编辑按钮
+     */
+    handleEdit(index, row) {
+      this.dialogVisible = true
+      this.formDisable = false
+      this.pojo = row
+    },
+    /**
+     * 弹出框右上角关闭
+     */
     handleClose(done) {
       this.$confirm('确认关闭？')
         .then(_ => {
@@ -156,12 +211,20 @@ export default {
         })
         .catch(_ => {})
     },
-    onSubmit() {
-      console.log('submit!')
-      // this.fetchData()
+    /**
+     * 弹出框取消按钮
+     */
+    handleCancel() {
+      this.dialogVisible = false
+      this.pojo = {}
     },
-    handleClick(row) {
-      console.log(row)
+    /**
+     * 弹出框确定按钮
+     */
+    handleSubmit() {
+      // TODO 判断新增还是编辑
+      this.dialogVisible = false
+      this.pojo = {}
     }
   }
 }
