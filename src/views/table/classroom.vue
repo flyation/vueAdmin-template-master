@@ -13,7 +13,7 @@
 <!--      </el-form-item>-->
       <el-form-item>
 <!--        <el-button type="primary" @click="handleSearch">查询</el-button>-->
-        <el-button type="primary" icon="el-icon-circle-plus" @click="handleEdit('')">新增</el-button>
+        <el-button type="primary" icon="el-icon-circle-plus" @click="handleEdit('')">新增教室</el-button>
       </el-form-item>
     </el-form>
 
@@ -45,7 +45,7 @@
         </el-form-item>
       </el-form>
       <span slot="footer" class="dialog-footer">
-      <el-button @click="dialogFormVisible = false">取 消</el-button>
+      <el-button @click="dialogVisible = false">取 消</el-button>
       <el-button type="primary" @click="handleSubmit">确 定</el-button>
     </span>
     </el-dialog>

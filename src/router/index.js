@@ -23,7 +23,7 @@ import Layout from '../views/layout/Layout'
 **/
 export const constantRouterMap = [
   { path: '/login', component: () => import('@/views/login/index'), hidden: true },
-  { path: '/404', component: () =>  import('@/views/404'), hidden: true },
+  { path: '/404', component: () => import('@/views/404'), hidden: true },
 
   {
     path: '/',
@@ -37,6 +37,7 @@ export const constantRouterMap = [
     }]
   },
 
+  /* 菜单1 */
   {
     path: '/example',
     component: Layout,
@@ -59,6 +60,7 @@ export const constantRouterMap = [
     ]
   },
 
+  /* 菜单2 */
   {
     path: '/form',
     component: Layout,
@@ -72,6 +74,7 @@ export const constantRouterMap = [
     ]
   },
 
+  /* 菜单3 */
   {
     path: '/classroom',
     component: Layout,
@@ -81,6 +84,44 @@ export const constantRouterMap = [
         name: 'Classroom',
         component: () => import('@/views/table/classroom'),
         meta: { title: '教室管理', icon: 'form' }
+      }
+    ]
+  },
+
+  /* 菜单4 */
+  {
+    path: '/reservation',
+    component: Layout,
+    name: 'Reservation',
+    meta: { title: '教室预约', icon: 'example' },
+    children: [
+      {
+        path: 'index',
+        name: 'Reservation',
+        component: () => import('@/views/table/reservation'),
+        meta: { title: '教室预约', icon: 'form' }
+      }
+    ]
+  },
+
+  /* 菜单5 */
+  {
+    path: '/user',
+    component: Layout,
+    name: 'User',
+    meta: { title: '个人中心', icon: 'example' },
+    children: [
+      {
+        path: 'history',
+        name: 'History',
+        // component: () => import('@/views/table/classroom'),
+        meta: { title: '预约记录', icon: 'form' }
+      },
+      {
+        path: 'account',
+        name: 'Account',
+        // component: () => import('@/views/table/classroom'),
+        meta: { title: '账号密码', icon: 'form' }
       }
     ]
   },
