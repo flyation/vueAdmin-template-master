@@ -31,7 +31,7 @@
             v-model="searchMap.capacity"
             show-stops
             :step="50"
-            :max="200">
+            :max="250">
           </el-slider>
         </el-form-item>
 
