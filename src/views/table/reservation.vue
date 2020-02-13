@@ -1,15 +1,15 @@
 <template>
   <div class="app-container">
 
-    <!-- 预约按钮 -->
+    <!-- 查询按钮 -->
     <el-form :inline="true" class="demo-form-inline">
       <el-form-item>
-        <el-button type="primary" icon="el-icon-circle-plus" @click="handleSearchOpen()">预约整个教室</el-button>
+        <el-button type="primary" icon="el-icon-circle-plus" @click="handleSearchOpen()">搜索教室</el-button>
       </el-form-item>
     </el-form>
 
-    <!-- 查询条件 -->
-    <el-dialog title="" :visible.sync="dialogVisible" width="50%">
+    <!-- 条件查询对话框 -->
+    <el-dialog title="条件查询" :visible.sync="dialogSearchVisible" width="50%">
       <el-form :model="searchMap" label-width="200px">
         <el-form-item label="选择日期">
           <el-date-picker
@@ -58,7 +58,7 @@
         </el-form-item>
       </el-form>
       <span slot="footer" class="dialog-footer">
-      <el-button @click="dialogVisible = false">取 消</el-button>
+      <el-button @click="dialogSearchVisible = false">取 消</el-button>
       <el-button type="primary" @click="handleSearchSubmit">确 定</el-button>
     </span>
     </el-dialog>
@@ -108,34 +108,97 @@
         sortable
         prop="course1"
         label="第1节课">
+        <template slot-scope="scope">
+          <font color="#dc143c">{{ scope.row.course1 === 1 ?  '被占用': '' }}</font>
+          <font color="228b22">{{ scope.row.course1 === 0 ?  '空闲': '' }}</font>
+        </template>
       </el-table-column>
 
       <el-table-column
         sortable
         prop="course2"
         label="第2节课">
+        <template slot-scope="scope">
+          <font color="#dc143c">{{ scope.row.course2 === 1 ?  '被占用': '' }}</font>
+          <font color="228b22">{{ scope.row.course2 === 0 ?  '空闲': '' }}</font>
+        </template>
       </el-table-column>
 
       <el-table-column
         sortable
         prop="course3"
         label="第3节课">
+        <template slot-scope="scope">
+          <font color="#dc143c">{{ scope.row.course3 === 1 ?  '被占用': '' }}</font>
+          <font color="228b22">{{ scope.row.course3 === 0 ?  '空闲': '' }}</font>
+        </template>
       </el-table-column>
 
       <el-table-column
         sortable
         prop="course4"
         label="第4节课">
+        <template slot-scope="scope">
+          <font color="#dc143c">{{ scope.row.course4 === 1 ?  '被占用': '' }}</font>
+          <font color="228b22">{{ scope.row.course4 === 0 ?  '空闲': '' }}</font>
+        </template>
       </el-table-column>
 
       <el-table-column
         fixed="right"
         label="操作">
         <template slot-scope="scope">
-          <el-button type="primary" size="small" @click="handleReserve(scope.row.id)">预约</el-button>
+          <el-button type="primary" size="small" @click="handleReserve(scope.row)">预约</el-button>
         </template>
       </el-table-column>
     </el-table>
+
+    <!-- 教室预约对话框 -->
+    <el-dialog title="预约申请" :visible.sync="dialogReserveVisible" width="50%">
+      <el-form :model="pojo" label-width="200px">
+        <el-form-item label="选择日期">
+          <el-date-picker
+            v-model="pojo.date"
+            type="date"
+            placeholder="选择日期">
+          </el-date-picker>
+        </el-form-item>
+
+        <el-form-item label="选择时间段">
+          <el-checkbox label="第1节课" v-model="pojo.course1" :disabled="pojo.course1 === 1"></el-checkbox>
+          <el-checkbox label="第2节课" v-model="pojo.course2" :disabled="pojo.course2 === 1"></el-checkbox>
+          <el-checkbox label="第3节课" v-model="pojo.course3" :disabled="pojo.course3 === 1"></el-checkbox>
+          <el-checkbox label="第4节课" v-model="pojo.course4" :disabled="pojo.course4 === 1"></el-checkbox>
+        </el-form-item>
+
+        <el-form-item label="教室容量">
+          <el-slider
+            v-model="pojo.capacity"
+            show-stops
+            :step="50"
+            :max="250"
+            :marks="marks"
+            disabled>
+          </el-slider>
+        </el-form-item>
+
+        <el-form-item label="教室类型">
+          <el-input v-model="pojo.type" disabled></el-input>
+        </el-form-item>
+
+        <el-form-item label="教学楼">
+          <el-input v-model="pojo.building" disabled></el-input>
+        </el-form-item>
+
+        <el-form-item label="预约原因">
+          <el-input v-model="pojo.reason" type="textarea" autosize placeholder="请输入内容"></el-input>
+        </el-form-item>
+      </el-form>
+      <span slot="footer" class="dialog-footer">
+      <el-button @click="dialogReserveVisible = false">取 消</el-button>
+      <el-button type="primary" @click="handleSearchSubmit">确 定</el-button>
+    </span>
+    </el-dialog>
 
     <!-- 分页 -->
     <br>
@@ -153,7 +216,6 @@
 </template>
 
 <script>
-  import classroomApi from '@/api/classroom'
   import reservationApi from '@/api/reservation'
   import message from '@/utils/message'
 
@@ -165,8 +227,9 @@
         pageSize: 10, // 每页大小
         list: [], // 后端传回数据列表
         id: '', // 数据库id
-        dialogVisible: false, // 弹出框是否可见
-        pojo: {}, // 列表数据
+        dialogSearchVisible: false, // 条件查询对话框是否可见
+        dialogReserveVisible: false, // 预约申请对话框是否可见
+        pojo: {}, // 预约申请表单绑定的实体对象
         listLoading: true, // 加载中动画
         // 教室类型选项
         typeOptions: [{
@@ -183,7 +246,13 @@
           value: '文德楼',
           label: '文德楼'
         }],
-        searchMap: {}
+        searchMap: {}, // 查询表单绑定的实体对象
+        marks: {
+          50: '50',
+          100: '100',
+          150: '150',
+          200: '200'
+        }
       }
     },
     created() {
@@ -209,26 +278,12 @@
           this.listLoading = false
         })
       },
-      // 弹出框 新增/修改
-      handleEdit(id) {
-        this.dialogVisible = true
-        this.id = id
-        if (this.id !== '') {
-          classroomApi.findById(this.id).then(response => {
-            if (response.flag === true) {
-              this.pojo = response.data
-            }
-          })
-        } else {
-          this.pojo = {} // 清空表单
-        }
-      },
-      // 搜索弹出框打开
+      // 条件查询对话框打开
       handleSearchOpen() {
         this.searchMap = { course1: false, course2: false, course3: false, course4: false }
-        this.dialogVisible = true
+        this.dialogSearchVisible = true
       },
-      // 编辑框确认
+      // 条件查询对话框确认
       handleSearchSubmit() {
         reservationApi.getPageList(this.currentPage, this.pageSize, this.searchMap).then(response => {
           if (response.flag === true) {
@@ -236,17 +291,12 @@
             this.total = response.data.total
           }
         })
-        this.dialogVisible = false // 隐藏窗口
+        this.dialogSearchVisible = false // 隐藏窗口
       },
-      // 表格单项删除
-      handleDelete(id) {
-        this.$confirm('确定要删除吗？', '提示', {
-          confirmButtonText: '确定',
-          cancelButtonText: '取消',
-          type: 'warning'
-        }).then(() => {
-          message.handleShowMessage(classroomApi.deleteById(id), this)
-        })
+      // 教室预约对话框打开
+      handleReserve(row) {
+        this.dialogReserveVisible = true
+        this.pojo = row
       }
     }
   }

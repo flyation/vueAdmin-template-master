@@ -92,6 +92,10 @@
         sortable
         prop="repair"
         label="是否报修">
+        <template slot-scope="scope">
+          <font color="red">{{ scope.row.repair === 1 ?  '报修': '' }}</font>
+          <font color="#228b22">{{ scope.row.repair === 0 ?  '正常使用': '' }}</font>
+        </template>
       </el-table-column>
       <el-table-column
         fixed="right"
